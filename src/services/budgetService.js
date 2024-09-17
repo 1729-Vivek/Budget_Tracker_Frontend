@@ -1,4 +1,5 @@
-const API_URL = 'https://budget-tracker-frontend-phi.vercel.app/';
+const API_URL = 'https://budget-tracker-backend-bvqp.onrender.com/api/budget';
+
 
 
 export const getBudgets = async () => {
