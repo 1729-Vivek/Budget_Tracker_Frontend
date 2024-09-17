@@ -1,4 +1,4 @@
-const API_URL = 'https://budget-tracker-frontend-phi.vercel.app/';
+const API_URL = 'http://localhost:5000/api/budget';
 
 
 export const getBudgets = async () => {
