@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import BudgetForm from './components/BudgetForm';
 import BudgetList from './components/BudgetList';
 import { getBudgets, addBudget, deleteBudget } from './services/budgetService';
@@ -19,55 +19,54 @@ export default function App() {
   const [error, setError] = useState(null);
 
   // Helper functions for localStorage category mapping
-  const getCategoryMap = () => {
+  const getCategoryMap = useCallback(() => {
     try {
       return JSON.parse(localStorage.getItem('budgetCategoryMap')) || {};
     } catch {
       return {};
     }
-  };
+  }, []);
 
-  const saveCategoryMap = (map) => {
+  const saveCategoryMap = useCallback((map) => {
     localStorage.setItem('budgetCategoryMap', JSON.stringify(map));
-  };
+  }, []);
 
-  const getCategoryForBudget = (budget) => {
+  const getCategoryForBudget = useCallback((budget) => {
     // First check if budget has category
     if (budget.category) return budget.category;
     
     // Otherwise look it up in localStorage
     const categoryMap = getCategoryMap();
     return categoryMap[budget._id] || 'other';
-  };
+  }, [getCategoryMap]);
 
-  const saveBudgetCategory = (budgetId, category) => {
+  const saveBudgetCategory = useCallback((budgetId, category) => {
     const categoryMap = getCategoryMap();
     categoryMap[budgetId] = category;
     saveCategoryMap(categoryMap);
-  };
+  }, [getCategoryMap, saveCategoryMap]);
 
   useEffect(() => {
+    const fetchBudgets = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const fetched = await getBudgets();
+        // Ensure all budgets have a category field using localStorage as backup
+        const normalizedBudgets = (fetched || []).map(b => ({
+          ...b,
+          category: getCategoryForBudget(b)
+        }));
+        setBudgets(normalizedBudgets);
+      } catch (err) {
+        console.error(err);
+        setError('Could not load budgets. Check backend.');
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchBudgets();
-  }, []);
-
-  const fetchBudgets = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const fetched = await getBudgets();
-      // Ensure all budgets have a category field using localStorage as backup
-      const normalizedBudgets = (fetched || []).map(b => ({
-        ...b,
-        category: getCategoryForBudget(b)
-      }));
-      setBudgets(normalizedBudgets);
-    } catch (err) {
-      console.error(err);
-      setError('Could not load budgets. Check backend.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [getCategoryForBudget]);
 
   const handleAddBudget = async (newBudget) => {
     try {
