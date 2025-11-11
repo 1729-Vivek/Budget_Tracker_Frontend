@@ -18,6 +18,34 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Helper functions for localStorage category mapping
+  const getCategoryMap = () => {
+    try {
+      return JSON.parse(localStorage.getItem('budgetCategoryMap')) || {};
+    } catch {
+      return {};
+    }
+  };
+
+  const saveCategoryMap = (map) => {
+    localStorage.setItem('budgetCategoryMap', JSON.stringify(map));
+  };
+
+  const getCategoryForBudget = (budget) => {
+    // First check if budget has category
+    if (budget.category) return budget.category;
+    
+    // Otherwise look it up in localStorage
+    const categoryMap = getCategoryMap();
+    return categoryMap[budget._id] || 'other';
+  };
+
+  const saveBudgetCategory = (budgetId, category) => {
+    const categoryMap = getCategoryMap();
+    categoryMap[budgetId] = category;
+    saveCategoryMap(categoryMap);
+  };
+
   useEffect(() => {
     fetchBudgets();
   }, []);
@@ -27,10 +55,10 @@ export default function App() {
     setError(null);
     try {
       const fetched = await getBudgets();
-      // Ensure all budgets have a category field (default to 'other' if missing)
+      // Ensure all budgets have a category field using localStorage as backup
       const normalizedBudgets = (fetched || []).map(b => ({
         ...b,
-        category: b.category || 'other'
+        category: getCategoryForBudget(b)
       }));
       setBudgets(normalizedBudgets);
     } catch (err) {
@@ -45,7 +73,13 @@ export default function App() {
     try {
       const created = await addBudget(newBudget);
       // Ensure category is preserved from newBudget if not in response
-      const budgetToAdd = created && created._id ? { ...newBudget, ...created } : { ...newBudget, _id: Math.random().toString(36).slice(2) };
+      const budgetToAdd = created && created._id 
+        ? { ...newBudget, ...created, category: newBudget.category } 
+        : { ...newBudget, _id: Math.random().toString(36).slice(2) };
+      
+      // Save category to localStorage for persistence across page refreshes
+      saveBudgetCategory(budgetToAdd._id, budgetToAdd.category);
+      
       setBudgets(prev => [...prev, budgetToAdd]);
     } catch (err) {
       console.error(err);
