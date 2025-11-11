@@ -1,38 +1,174 @@
-.App {
-  text-align: center;
+/* ------------------------------
+   Colorful, playful theme
+   Replace your current App.css with this
+   ------------------------------ */
+
+/* Variables */
+:root{
+  --bg-1: #F8FAFF;
+  --bg-2: #fff;
+  --muted: #64748b;
+  --text: #071033;
+  --glass: rgba(255,255,255,0.7);
+  --card-shadow: 0 12px 30px rgba(8,15,52,0.06);
+  --accent-a: linear-gradient(135deg,#7c3aed,#06b6d4);
+  --accent-b: linear-gradient(135deg,#f97316,#f43f5e);
+  --accent-c: linear-gradient(135deg,#06b6d4,#3b82f6);
+  --accent-d: linear-gradient(135deg,#f43f5e,#f59e0b);
+  --glass-blur: 8px;
+  --radius: 12px;
+  --smooth: cubic-bezier(.16,.84,.44,1);
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* Basic reset */
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+  background:
+    radial-gradient(800px 300px at 10% 5%, rgba(124,58,237,0.06), transparent 10%),
+    radial-gradient(600px 240px at 90% 80%, rgba(6,182,212,0.04), transparent 10%),
+    var(--bg-1);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  padding:28px 18px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Container */
+.container{max-width:1200px;margin:0 auto;}
+
+/* Header */
+.header{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px;
+}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{
+  width:56px;height:56px;border-radius:14px;display:grid;place-items:center;
+  background:linear-gradient(180deg,#fff 0%, rgba(255,255,255,0.8) 100%);
+  box-shadow: 0 8px 26px rgba(99,102,241,0.08);
+  border:1px solid rgba(255,255,255,0.6);
+}
+.title{margin:0;font-size:20px;font-weight:800;letter-spacing:0.1px}
+.subtitle{margin:0;font-size:13px;color:var(--muted)}
+
+/* Total pill */
+.summary{
+  min-width:120px;text-align:center;padding:12px;border-radius:16px;
+  background:linear-gradient(180deg, rgba(124,58,237,0.08), rgba(99,102,241,0.02));
+  box-shadow: 0 8px 36px rgba(99,102,241,0.06);
+  border:1px solid rgba(124,58,237,0.06);
+}
+.summary-label{font-size:12px;color:var(--muted)}
+.summary-value{font-size:20px;font-weight:800;margin-top:6px;color:#111827}
+
+/* Main grid */
+.main-grid{display:grid;grid-template-columns:1fr;gap:20px}
+@media(min-width:780px){ .main-grid{grid-template-columns:340px 1fr} }
+
+/* Left: form and tips */
+.left-col .section-title{font-size:14px;margin-bottom:10px;font-weight:700}
+.form{
+  display:grid;grid-template-columns:1fr 110px;gap:10px;align-items:center;
+  padding:14px;background:linear-gradient(180deg,#ffffff,#fbfbff);border-radius:14px;box-shadow:var(--card-shadow);
+  border:1px solid rgba(10,20,60,0.03);
+}
+@media(max-width:520px){ .form{grid-template-columns:1fr} }
+
+/* Inputs */
+.input,.select{
+  padding:12px 14px;border-radius:10px;border:1px solid rgba(10,20,60,0.06);
+  background:transparent;font-size:14px;color:var(--text);outline:none;
+}
+.input:focus,.select:focus{ box-shadow: 0 6px 20px rgba(99,102,241,0.08); transform: translateZ(0); border-color: #6366f1; }
+
+/* Add button — animated with blob */
+.btn-primary{
+  position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:12px 14px;border-radius:12px;border:none;color:white;font-weight:700;cursor:pointer;
+  background:var(--accent-a); box-shadow: 0 10px 30px rgba(99,102,241,0.14); transform: translateZ(0);
+  transition: transform .18s var(--smooth), box-shadow .18s var(--smooth);
+}
+.btn-primary:hover{ transform: translateY(-4px); box-shadow: 0 18px 48px rgba(99,102,241,0.18); }
+.btn-primary:active{ transform: translateY(-1px) scale(.996); }
+
+/* animated gradient blob on button */
+.btn-primary::after{
+  content:'';position:absolute;right:-40px;top:-50px;width:140px;height:140px;border-radius:50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.14), transparent 30%),
+             radial-gradient(circle at 70% 70%, rgba(255,255,255,0.06), transparent 20%);
+  transform: rotate(12deg);opacity:.9;pointer-events:none;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+/* Tips */
+.tips{margin-top:12px;padding:12px;border-radius:12px;background:linear-gradient(180deg,#fff,#fcfbff);box-shadow:0 10px 30px rgba(2,6,23,0.03);color:var(--muted);font-size:14px}
+
+/* Right column header */
+.list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.section-title{font-weight:700}
+.count{color:var(--muted)}
+
+/* Cards grid */
+.cards-grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:700px){ .cards-grid{grid-template-columns:repeat(2,1fr)} }
+@media(min-width:1000px){ .cards-grid{grid-template-columns:repeat(3,1fr)} }
+
+/* Card */
+.card{
+  display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;background:linear-gradient(180deg,#ffffff,#fbfdff);
+  box-shadow: 0 12px 30px rgba(12,18,48,0.06);border:1px solid rgba(10,20,60,0.03);
+  transition: transform .14s var(--smooth), box-shadow .14s var(--smooth);
+}
+.card:hover{ transform: translateY(-6px); box-shadow: 0 22px 50px rgba(12,18,48,0.08); }
+
+/* colorful accent bar (left) */
+.card-accent{
+  width:6px;height:64px;border-radius:6px;margin-right:6px;flex-shrink:0;
+}
+/* make react-icons visible inside avatar */
+.avatar svg, .avatar-icon svg {
+  width: 22px;
+  height: 22px;
+  color: white;          /* ensures icon is white against colorful background */
+  display: block;
 }
 
-.App-link {
-  color: #61dafb;
+/* wrapper to center the icon */
+.avatar .avatar-icon {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+
+/* center */
+.card-center{flex:1;min-width:0}
+.card-title{font-weight:700;color:#071033;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-meta{font-size:12px;color:var(--muted);margin-top:6px}
+
+/* right */
+.card-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.amount{font-weight:800;color:#111827}
+.btn-link{background:none;border:none;color:#ef4444;cursor:pointer;padding:6px 8px;border-radius:8px}
+.btn-link:hover{background: rgba(239,68,68,0.06)}
+
+/* Category badges */
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:600;color:white}
+.badge.food{background:linear-gradient(90deg,#fb923c,#f97316)}
+.badge.transport{background:linear-gradient(90deg,#06b6d4,#3b82f6)}
+.badge.health{background:linear-gradient(90deg,#ef4444,#fb7185)}
+.badge.entertainment{background:linear-gradient(90deg,#7c3aed,#06b6d4)}
+.badge.other{background:linear-gradient(90deg,#94a3b8,#64748b)}
+
+/* skeleton */
+.skeleton-card{height:86px;border-radius:12px;background:linear-gradient(90deg,#f3f4f6,#ffffff);animation:pulse 1.3s infinite}
+@keyframes pulse{0%{opacity:.6}50%{opacity:1}100%{opacity:.6}}
+
+/* empty message */
+.empty{padding:18px;border-radius:12px;background:#fff;color:var(--muted);text-align:center}
+
+/* footer */
+.footer{text-align:center;color:#94a3b8;margin-top:26px;padding-bottom:24px}

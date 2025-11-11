@@ -1,35 +1,52 @@
 import React, { useState } from 'react';
 
-const BudgetForm = ({ onAddBudget }) => {
+export default function BudgetForm({ onAddBudget }) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState('Other');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onAddBudget({ description, amount: Number(amount) });
+    if (!description || !amount) return;
+    await onAddBudget({
+      description,
+      amount: Number(amount),
+      category,
+      date: new Date().toISOString()
+    });
     setDescription('');
     setAmount('');
+    setCategory('Other');
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="form" onSubmit={handleSubmit}>
       <input
+        className="input"
         type="text"
-        placeholder="Description"
+        placeholder="Description (e.g. Groceries)"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         required
       />
       <input
+        className="input"
         type="number"
         placeholder="Amount"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         required
       />
-      <button type="submit">Add</button>
+
+      <select className="select" value={category} onChange={(e) => setCategory(e.target.value)}>
+        <option>Food</option>
+        <option>Transport</option>
+        <option>Health</option>
+        <option>Entertainment</option>
+        <option>Other</option>
+      </select>
+
+      <button className="btn-primary" type="submit">Add</button>
     </form>
   );
-};
-
-export default BudgetForm;
+}

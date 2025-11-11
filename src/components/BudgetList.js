@@ -1,16 +1,16 @@
 import React from 'react';
+import BudgetCard from './BudgetCard';
 
-const BudgetList = ({ budgets, onDeleteBudget }) => {
+export default function BudgetList({ budgets = [], onDeleteBudget }) {
+  if (!budgets.length) {
+    return <div className="empty">No entries yet — add your first expense.</div>;
+  }
+
   return (
-    <ul>
-      {budgets.map((budget) => (
-        <li key={budget._id}>
-          {budget.description} - ${budget.amount} 
-          <button onClick={() => onDeleteBudget(budget._id)}>Delete</button>
-        </li>
+    <div className="cards-grid">
+      {budgets.map(b => (
+        <BudgetCard key={b._id} budget={b} onDelete={() => onDeleteBudget(b._id)} />
       ))}
-    </ul>
+    </div>
   );
-};
-
-export default BudgetList;
+}
