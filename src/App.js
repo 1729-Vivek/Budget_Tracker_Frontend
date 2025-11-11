@@ -27,7 +27,12 @@ export default function App() {
     setError(null);
     try {
       const fetched = await getBudgets();
-      setBudgets(fetched || []);
+      // Ensure all budgets have a category field (default to 'other' if missing)
+      const normalizedBudgets = (fetched || []).map(b => ({
+        ...b,
+        category: b.category || 'other'
+      }));
+      setBudgets(normalizedBudgets);
     } catch (err) {
       console.error(err);
       setError('Could not load budgets. Check backend.');
@@ -39,7 +44,9 @@ export default function App() {
   const handleAddBudget = async (newBudget) => {
     try {
       const created = await addBudget(newBudget);
-      setBudgets(prev => [...prev, created || { ...newBudget, _id: Math.random().toString(36).slice(2) }]);
+      // Ensure category is preserved from newBudget if not in response
+      const budgetToAdd = created && created._id ? { ...newBudget, ...created } : { ...newBudget, _id: Math.random().toString(36).slice(2) };
+      setBudgets(prev => [...prev, budgetToAdd]);
     } catch (err) {
       console.error(err);
       setError('Failed to add entry.');

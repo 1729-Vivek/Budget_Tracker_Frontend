@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 export default function BudgetForm({ onAddBudget }) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('Other');
+  const [category, setCategory] = useState('other');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,7 +16,7 @@ export default function BudgetForm({ onAddBudget }) {
     });
     setDescription('');
     setAmount('');
-    setCategory('Other');
+    setCategory('other');
   };
 
   return (
@@ -39,11 +39,11 @@ export default function BudgetForm({ onAddBudget }) {
       />
 
       <select className="select" value={category} onChange={(e) => setCategory(e.target.value)}>
-        <option>Food</option>
-        <option>Transport</option>
-        <option>Health</option>
-        <option>Entertainment</option>
-        <option>Other</option>
+        <option value="food">Food</option>
+        <option value="transport">Transport</option>
+        <option value="health">Health</option>
+        <option value="entertainment">Entertainment</option>
+        <option value="other">Other</option>
       </select>
 
       <button className="btn-primary" type="submit">Add</button>
