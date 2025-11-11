@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import BudgetForm from './components/BudgetForm';
 import BudgetList from './components/BudgetList';
+import CategoryPieChart from './components/CategoryPieChart';
+import DayWiseTotal from './components/DayWiseTotal';
 import { getBudgets, addBudget, deleteBudget } from './services/budgetService';
 import './App.css';
 
@@ -146,6 +148,14 @@ export default function App() {
             )}
           </section>
         </main>
+
+        {/* Analytics Section */}
+        <section className="analytics-section">
+          <div className="analytics-grid">
+            <CategoryPieChart budgets={budgets} />
+            <DayWiseTotal budgets={budgets} />
+          </div>
+        </section>
 
         <footer className="footer">Built with ♥ — mobile-first and responsive</footer>
       </div>
