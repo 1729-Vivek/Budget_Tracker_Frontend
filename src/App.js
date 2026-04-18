@@ -155,6 +155,7 @@ export default function App() {
 
   const handleAddBudget = async (newBudget) => {
     try {
+      setError(null);
       const created = await addBudget(newBudget, token);
       // Ensure category is preserved from newBudget if not in response
       const budgetToAdd = created && created._id 
@@ -165,9 +166,11 @@ export default function App() {
       saveBudgetCategory(budgetToAdd._id, budgetToAdd.category);
       
       setBudgets(prev => [...prev, budgetToAdd]);
+      return true;
     } catch (err) {
       console.error(err);
-      setError('Failed to add entry.');
+      setError(err.message || 'Failed to add entry.');
+      return false;
     }
   };
 

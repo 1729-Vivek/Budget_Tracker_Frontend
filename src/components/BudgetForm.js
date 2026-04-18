@@ -7,16 +7,25 @@ export default function BudgetForm({ onAddBudget }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!description || !amount) return;
-    await onAddBudget({
-      description,
-      amount: Number(amount),
+    const trimmedDescription = description.trim();
+    const parsedAmount = Number(amount);
+
+    if (!trimmedDescription || !Number.isFinite(parsedAmount)) {
+      return;
+    }
+
+    const wasSaved = await onAddBudget({
+      description: trimmedDescription,
+      amount: parsedAmount,
       category,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
     });
-    setDescription('');
-    setAmount('');
-    setCategory('other');
+
+    if (wasSaved) {
+      setDescription('');
+      setAmount('');
+      setCategory('other');
+    }
   };
 
   return (
