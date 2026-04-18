@@ -51,6 +51,13 @@ export const addBudget = async (budget, token) =>
     body: JSON.stringify(budget),
   });
 
+export const updateBudget = async (id, budget, token) =>
+  request(`/budget/${id}`, {
+    method: 'PUT',
+    headers: withAuth(token),
+    body: JSON.stringify(budget),
+  });
+
 export const deleteBudget = async (id, token) =>
   request(`/budget/${id}`, {
     method: 'DELETE',

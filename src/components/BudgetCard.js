@@ -39,7 +39,7 @@ const categoryConfig = {
   other:       { icon: <FaQuestionCircle />, accent: 'linear-gradient(180deg,#94a3b8,#64748b)', avatar: 'linear-gradient(180deg,#94a3b8,#a7b2bd)' }
 };
 
-export default function BudgetCard({ budget, onDelete }) {
+export default function BudgetCard({ budget, onDelete, onEdit, isEditing, isHighlighted }) {
   const description = budget.description || budget.title || 'Expense';
   const amount = budget.amount || 0;
   const rawCategory = (budget.category || 'Other').toString().trim();
@@ -47,33 +47,50 @@ export default function BudgetCard({ budget, onDelete }) {
   const date = budget.date || budget.createdAt || new Date().toISOString();
 
   const config = categoryConfig[key] || categoryConfig[key.split(' ')[0]] || categoryConfig.other;
-  const displayCategory = rawCategory || 'Other';
+  const displayCategory = rawCategory
+    ? rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1).toLowerCase()
+    : 'Other';
+  const formattedDate = new Date(date).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 
   return (
-    <div className="card">
-      {/* left colorful accent bar */}
+    <div className={`card${isHighlighted ? ' card-highlighted' : ''}`}>
       <div className="card-accent" style={{ background: config.accent }} />
+      <div className="card-shell">
+        <div className="card-top">
+          <div className="card-identity">
+            <div className="avatar" style={{ background: config.avatar }}>
+              <span className="avatar-icon" aria-hidden>{config.icon}</span>
+            </div>
 
-      {/* avatar with icon */}
-      <div className="avatar" style={{ background: config.avatar }}>
-        <span className="avatar-icon" aria-hidden>{config.icon}</span>
-      </div>
+            <div className="card-center">
+              <div className="card-title">{description}</div>
+              <div className="card-meta">
+                <span className="card-date">{formattedDate}</span>
+              </div>
+            </div>
+          </div>
 
-      {/* content */}
-      <div className="card-center">
-        <div className="card-title">{description}</div>
-        <div className="card-meta">
-          <span className="badge" style={{ background: config.accent }}>{displayCategory}</span>
-          <span style={{ marginLeft: 10, color: '#94a3b8', fontSize: 12 }}>
-            • {new Date(date).toLocaleDateString()}
-          </span>
+          <div className="card-right">
+            <div className="amount">₹{Number(amount).toLocaleString('en-IN')}</div>
+            <div className="card-note">Expense</div>
+          </div>
         </div>
-      </div>
 
-      {/* right side */}
-      <div className="card-right">
-        <div className="amount">₹{Number(amount).toLocaleString()}</div>
-        <button className="btn-link" onClick={() => onDelete(budget._id)}>Delete</button>
+        <div className="card-bottom">
+          <span className="badge" style={{ background: config.accent }}>{displayCategory}</span>
+          <div className="card-actions">
+            <button className={`btn-link btn-link-neutral${isEditing ? ' active' : ''}`} onClick={() => onEdit(budget)}>
+              {isEditing ? 'Editing' : 'Edit'}
+            </button>
+            <button className="btn-link" onClick={() => onDelete(budget._id)}>
+              Remove
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

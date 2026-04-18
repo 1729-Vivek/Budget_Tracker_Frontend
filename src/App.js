@@ -7,6 +7,7 @@ import AuthForm from './components/AuthForm';
 import {
   getBudgets,
   addBudget,
+  updateBudget,
   deleteBudget,
   loginUser,
   registerUser,
@@ -38,6 +39,9 @@ export default function App() {
   const [error, setError] = useState(null);
   const [authError, setAuthError] = useState('');
   const [authMode, setAuthMode] = useState('login');
+  const [editingBudget, setEditingBudget] = useState(null);
+  const [highlightedBudgetId, setHighlightedBudgetId] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const getCategoryMap = useCallback(() => {
     try {
@@ -78,6 +82,7 @@ export default function App() {
     setToken('');
     setUser(null);
     setBudgets([]);
+    setEditingBudget(null);
   }, []);
 
   useEffect(() => {
@@ -135,6 +140,34 @@ export default function App() {
     validateStoredSession();
   }, [clearSession, token, user]);
 
+  useEffect(() => {
+    if (!toast) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setToast(null);
+    }, 2400);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!highlightedBudgetId) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setHighlightedBudgetId(null);
+    }, 2600);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [highlightedBudgetId]);
+
+  const showToast = useCallback((message) => {
+    setToast({ message, id: Date.now() });
+  }, []);
+
   const handleAuthSubmit = async (form) => {
     setAuthLoading(true);
     setAuthError('');
@@ -166,6 +199,8 @@ export default function App() {
       saveBudgetCategory(budgetToAdd._id, budgetToAdd.category);
       
       setBudgets(prev => [...prev, budgetToAdd]);
+      setHighlightedBudgetId(budgetToAdd._id);
+      showToast('Expense added successfully.');
       return true;
     } catch (err) {
       console.error(err);
@@ -174,10 +209,46 @@ export default function App() {
     }
   };
 
+  const handleStartEditBudget = (budget) => {
+    setError(null);
+    setEditingBudget(budget);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingBudget(null);
+    setError(null);
+  };
+
+  const handleUpdateBudget = async (id, updatedBudget) => {
+    try {
+      setError(null);
+      const savedBudget = await updateBudget(id, updatedBudget, token);
+      const normalizedBudget = {
+        ...savedBudget,
+        category: updatedBudget.category,
+      };
+
+      saveBudgetCategory(id, updatedBudget.category);
+      setBudgets((prev) => prev.map((budget) => (budget._id === id ? normalizedBudget : budget)));
+      setEditingBudget(null);
+      setHighlightedBudgetId(id);
+      showToast('Expense updated successfully.');
+      return true;
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Failed to update entry.');
+      return false;
+    }
+  };
+
   const handleDeleteBudget = async (id) => {
     try {
       await deleteBudget(id, token);
       setBudgets(prev => prev.filter(b => b._id !== id));
+      if (editingBudget?._id === id) {
+        setEditingBudget(null);
+      }
+      showToast('Expense removed.');
     } catch (err) {
       console.error(err);
       setError('Failed to delete entry.');
@@ -188,6 +259,11 @@ export default function App() {
 
   return (
     <div className="app-root">
+      {toast ? (
+        <div key={toast.id} className="toast-banner" role="status" aria-live="polite">
+          {toast.message}
+        </div>
+      ) : null}
       <div className="container">
         <header className="header">
           <div className="brand">
@@ -250,13 +326,18 @@ export default function App() {
         ) : (
           <main className="main-grid">
             <aside className="left-col">
-              <h2 className="section-title">Add Entry</h2>
-              <BudgetForm onAddBudget={handleAddBudget} />
+              <h2 className="section-title">{editingBudget ? 'Edit Entry' : 'Add Entry'}</h2>
+              <BudgetForm
+                onAddBudget={handleAddBudget}
+                onUpdateBudget={handleUpdateBudget}
+                editingBudget={editingBudget}
+                onCancelEdit={handleCancelEdit}
+              />
               <div className="tips">
                 <h3>Tips</h3>
                 <ul>
                   <li>Each signed-in user now sees only their own budget entries.</li>
-                  <li>Categories are preserved locally so your charts stay readable.</li>
+                  <li>Edit lets you update an existing expense without creating a duplicate.</li>
                   <li>Delete removes the entry from your account immediately.</li>
                 </ul>
               </div>
@@ -275,7 +356,13 @@ export default function App() {
               ) : error ? (
                 <div className="error-banner">{error}</div>
               ) : (
-                <BudgetList budgets={budgets} onDeleteBudget={handleDeleteBudget} />
+                <BudgetList
+                  budgets={budgets}
+                  onDeleteBudget={handleDeleteBudget}
+                  onEditBudget={handleStartEditBudget}
+                  editingBudgetId={editingBudget?._id}
+                  highlightedBudgetId={highlightedBudgetId}
+                />
               )}
             </section>
           </main>
