@@ -1,21 +1,58 @@
-const API_URL = 'https://budget-tracker-backend-bvqp.onrender.com/api/budget';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
+const request = async (path, options = {}) => {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
 
+  const data = await response.json().catch(() => ({}));
 
-export const getBudgets = async () => {
-  const response = await fetch(API_URL);
-  return await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Request failed.');
+  }
+
+  return data;
 };
 
-export const addBudget = async (budget) => {
-  const response = await fetch(API_URL, {
+const withAuth = (token) => ({
+  Authorization: `Bearer ${token}`,
+});
+
+export const registerUser = async (payload) =>
+  request('/auth/register', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+export const loginUser = async (payload) =>
+  request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const getCurrentUser = async (token) =>
+  request('/auth/me', {
+    headers: withAuth(token),
+  });
+
+export const getBudgets = async (token) =>
+  request('/budget', {
+    headers: withAuth(token),
+  });
+
+export const addBudget = async (budget, token) =>
+  request('/budget', {
+    method: 'POST',
+    headers: withAuth(token),
     body: JSON.stringify(budget),
   });
-  return await response.json();
-};
 
-export const deleteBudget = async (id) => {
-  await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-};
+export const deleteBudget = async (id, token) =>
+  request(`/budget/${id}`, {
+    method: 'DELETE',
+    headers: withAuth(token),
+  });

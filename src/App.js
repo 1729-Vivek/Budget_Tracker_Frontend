@@ -3,7 +3,15 @@ import BudgetForm from './components/BudgetForm';
 import BudgetList from './components/BudgetList';
 import CategoryPieChart from './components/CategoryPieChart';
 import DayWiseTotal from './components/DayWiseTotal';
-import { getBudgets, addBudget, deleteBudget } from './services/budgetService';
+import AuthForm from './components/AuthForm';
+import {
+  getBudgets,
+  addBudget,
+  deleteBudget,
+  loginUser,
+  registerUser,
+  getCurrentUser,
+} from './services/budgetService';
 import './App.css';
 
 function IconMoney() {
@@ -17,27 +25,36 @@ function IconMoney() {
 
 export default function App() {
   const [budgets, setBudgets] = useState([]);
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('budgetUser'));
+    } catch {
+      return null;
+    }
+  });
+  const [token, setToken] = useState(() => localStorage.getItem('budgetToken') || '');
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [authError, setAuthError] = useState('');
+  const [authMode, setAuthMode] = useState('login');
 
-  // Helper functions for localStorage category mapping
   const getCategoryMap = useCallback(() => {
     try {
-      return JSON.parse(localStorage.getItem('budgetCategoryMap')) || {};
+      const categoryKey = user?._id ? `budgetCategoryMap:${user._id}` : 'budgetCategoryMap:guest';
+      return JSON.parse(localStorage.getItem(categoryKey)) || {};
     } catch {
       return {};
     }
-  }, []);
+  }, [user]);
 
   const saveCategoryMap = useCallback((map) => {
-    localStorage.setItem('budgetCategoryMap', JSON.stringify(map));
-  }, []);
+    const categoryKey = user?._id ? `budgetCategoryMap:${user._id}` : 'budgetCategoryMap:guest';
+    localStorage.setItem(categoryKey, JSON.stringify(map));
+  }, [user]);
 
   const getCategoryForBudget = useCallback((budget) => {
-    // First check if budget has category
     if (budget.category) return budget.category;
-    
-    // Otherwise look it up in localStorage
     const categoryMap = getCategoryMap();
     return categoryMap[budget._id] || 'other';
   }, [getCategoryMap]);
@@ -48,31 +65,98 @@ export default function App() {
     saveCategoryMap(categoryMap);
   }, [getCategoryMap, saveCategoryMap]);
 
+  const persistSession = useCallback((sessionToken, sessionUser) => {
+    localStorage.setItem('budgetToken', sessionToken);
+    localStorage.setItem('budgetUser', JSON.stringify(sessionUser));
+    setToken(sessionToken);
+    setUser(sessionUser);
+  }, []);
+
+  const clearSession = useCallback(() => {
+    localStorage.removeItem('budgetToken');
+    localStorage.removeItem('budgetUser');
+    setToken('');
+    setUser(null);
+    setBudgets([]);
+  }, []);
+
   useEffect(() => {
     const fetchBudgets = async () => {
+      if (!token) {
+        setBudgets([]);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError(null);
+
       try {
-        const fetched = await getBudgets();
+        const fetched = await getBudgets(token);
         // Ensure all budgets have a category field using localStorage as backup
-        const normalizedBudgets = (fetched || []).map(b => ({
+        const normalizedBudgets = (fetched || []).map((b) => ({
           ...b,
-          category: getCategoryForBudget(b)
+          category: getCategoryForBudget(b),
         }));
         setBudgets(normalizedBudgets);
       } catch (err) {
         console.error(err);
-        setError('Could not load budgets. Check backend.');
+        if (err.message.toLowerCase().includes('token')) {
+          clearSession();
+          setAuthError('Your session expired. Please sign in again.');
+        } else {
+          setError('Could not load budgets. Check backend.');
+        }
       } finally {
         setLoading(false);
       }
     };
+
     fetchBudgets();
-  }, [getCategoryForBudget]);
+  }, [clearSession, getCategoryForBudget, token]);
+
+  useEffect(() => {
+    const validateStoredSession = async () => {
+      if (!token || user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await getCurrentUser(token);
+        setUser(response.user);
+        localStorage.setItem('budgetUser', JSON.stringify(response.user));
+      } catch (err) {
+        console.error(err);
+        clearSession();
+      }
+    };
+
+    validateStoredSession();
+  }, [clearSession, token, user]);
+
+  const handleAuthSubmit = async (form) => {
+    setAuthLoading(true);
+    setAuthError('');
+
+    try {
+      const action = authMode === 'register' ? registerUser : loginUser;
+      const payload = authMode === 'register' ? form : { email: form.email, password: form.password };
+      const response = await action(payload);
+      persistSession(response.token, response.user);
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setAuthError(err.message || 'Authentication failed.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   const handleAddBudget = async (newBudget) => {
     try {
-      const created = await addBudget(newBudget);
+      setError(null);
+      const created = await addBudget(newBudget, token);
       // Ensure category is preserved from newBudget if not in response
       const budgetToAdd = created && created._id 
         ? { ...newBudget, ...created, category: newBudget.category } 
@@ -82,15 +166,17 @@ export default function App() {
       saveBudgetCategory(budgetToAdd._id, budgetToAdd.category);
       
       setBudgets(prev => [...prev, budgetToAdd]);
+      return true;
     } catch (err) {
       console.error(err);
-      setError('Failed to add entry.');
+      setError(err.message || 'Failed to add entry.');
+      return false;
     }
   };
 
   const handleDeleteBudget = async (id) => {
     try {
-      await deleteBudget(id);
+      await deleteBudget(id, token);
       setBudgets(prev => prev.filter(b => b._id !== id));
     } catch (err) {
       console.error(err);
@@ -108,56 +194,103 @@ export default function App() {
             <div className="logo">{IconMoney()}</div>
             <div>
               <h1 className="title">Budget Tracker</h1>
-              <p className="subtitle">Simple, fast and responsive</p>
+              <p className="subtitle">
+                {user ? `Signed in as ${user.name}` : 'Register or sign in to manage your budgets'}
+              </p>
             </div>
           </div>
-          <div className="summary">
-            <div className="summary-label">Total</div>
-            <div className="summary-value">₹{total.toLocaleString()}</div>
+
+          <div className="header-actions">
+            <div className="summary">
+              <div className="summary-label">Total</div>
+              <div className="summary-value">₹{total.toLocaleString()}</div>
+            </div>
+
+            {user ? (
+              <button className="btn-secondary" type="button" onClick={clearSession}>
+                Logout
+              </button>
+            ) : null}
           </div>
         </header>
 
-        <main className="main-grid">
-          <aside className="left-col">
-            <h2 className="section-title">Add Entry</h2>
-            <BudgetForm onAddBudget={handleAddBudget} />
-            <div className="tips">
-              <h3>Tips</h3>
-              <ul>
-                <li>Use categories to filter later (coming soon).</li>
-                <li>Amounts are saved on the server if backend is running.</li>
-                <li>Tap delete to remove an entry.</li>
-              </ul>
-            </div>
-          </aside>
-
-          <section className="right-col">
-            <div className="list-header">
-              <h2 className="section-title">Recent Entries</h2>
-              <div className="count">{budgets.length} items</div>
-            </div>
-
-            {loading ? (
-              <div className="skeleton-grid">
-                {[...Array(6)].map((_, i) => <div key={i} className="skeleton-card" />)}
+        {!user ? (
+          <main className="auth-layout">
+            <section className="auth-panel">
+              <div className="auth-copy">
+                <span className="eyebrow">Personal access</span>
+                <h2 className="auth-title">Keep your budget private and synced to your account.</h2>
+                <p className="auth-text">
+                  Create an account to start saving expenses against your own profile, or sign in to continue where you left off.
+                </p>
               </div>
-            ) : error ? (
-              <div className="error-banner">{error}</div>
-            ) : (
-              <BudgetList budgets={budgets} onDeleteBudget={handleDeleteBudget} />
-            )}
+
+              <div className="auth-switch">
+                <button
+                  className={`toggle-chip ${authMode === 'login' ? 'active' : ''}`}
+                  type="button"
+                  onClick={() => setAuthMode('login')}
+                >
+                  Sign in
+                </button>
+                <button
+                  className={`toggle-chip ${authMode === 'register' ? 'active' : ''}`}
+                  type="button"
+                  onClick={() => setAuthMode('register')}
+                >
+                  Register
+                </button>
+              </div>
+
+              {authError ? <div className="error-banner">{authError}</div> : null}
+
+              <AuthForm mode={authMode} onSubmit={handleAuthSubmit} submitting={authLoading} />
+            </section>
+          </main>
+        ) : (
+          <main className="main-grid">
+            <aside className="left-col">
+              <h2 className="section-title">Add Entry</h2>
+              <BudgetForm onAddBudget={handleAddBudget} />
+              <div className="tips">
+                <h3>Tips</h3>
+                <ul>
+                  <li>Each signed-in user now sees only their own budget entries.</li>
+                  <li>Categories are preserved locally so your charts stay readable.</li>
+                  <li>Delete removes the entry from your account immediately.</li>
+                </ul>
+              </div>
+            </aside>
+
+            <section className="right-col">
+              <div className="list-header">
+                <h2 className="section-title">Recent Entries</h2>
+                <div className="count">{budgets.length} items</div>
+              </div>
+
+              {loading ? (
+                <div className="skeleton-grid">
+                  {[...Array(6)].map((_, i) => <div key={i} className="skeleton-card" />)}
+                </div>
+              ) : error ? (
+                <div className="error-banner">{error}</div>
+              ) : (
+                <BudgetList budgets={budgets} onDeleteBudget={handleDeleteBudget} />
+              )}
+            </section>
+          </main>
+        )}
+
+        {user ? (
+          <section className="analytics-section">
+            <div className="analytics-grid">
+              <CategoryPieChart budgets={budgets} />
+              <DayWiseTotal budgets={budgets} />
+            </div>
           </section>
-        </main>
+        ) : null}
 
-        {/* Analytics Section */}
-        <section className="analytics-section">
-          <div className="analytics-grid">
-            <CategoryPieChart budgets={budgets} />
-            <DayWiseTotal budgets={budgets} />
-          </div>
-        </section>
-
-        <footer className="footer">Built with ♥ — mobile-first and responsive</footer>
+        <footer className="footer">Built for personal, account-based budget tracking.</footer>
       </div>
     </div>
   );

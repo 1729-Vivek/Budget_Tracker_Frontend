@@ -46,10 +46,6 @@ export default function BudgetCard({ budget, onDelete }) {
   const key = rawCategory.toLowerCase();
   const date = budget.date || budget.createdAt || new Date().toISOString();
 
-  // Debug: log budget data to verify category matching
-  console.log('Budget data:', { description, amount, rawCategory, key, date });
-
-  // best-effort matching: exact key -> first word -> fallback
   const config = categoryConfig[key] || categoryConfig[key.split(' ')[0]] || categoryConfig.other;
   const displayCategory = rawCategory || 'Other';
 
