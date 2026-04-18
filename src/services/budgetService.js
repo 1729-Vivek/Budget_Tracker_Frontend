@@ -1,6 +1,14 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const isLocalBrowser =
+  typeof window !== 'undefined' &&
+  ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || (isLocalBrowser ? 'http://localhost:5000/api' : '');
 
 const request = async (path, options = {}) => {
+  if (!API_BASE_URL) {
+    throw new Error('Frontend API is not configured. Set REACT_APP_API_URL in the deployed frontend environment.');
+  }
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
