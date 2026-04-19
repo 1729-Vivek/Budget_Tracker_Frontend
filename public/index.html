@@ -4,40 +4,60 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#081321" />
     <meta
       name="description"
-      content="Web site created using create-react-app"
+      content="Budget Tracker is a personal finance web app for expense tracking, category-based budgeting, and spending insights."
     />
+    <meta
+      name="keywords"
+      content="budget tracker, expense tracker, personal finance app, budget planner, spending tracker, expense management"
+    />
+    <meta name="author" content="Budget Tracker" />
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+    <meta name="google-site-verification" content="%REACT_APP_GOOGLE_SITE_VERIFICATION%" />
+    <meta name="google-adsense-account" content="%REACT_APP_GOOGLE_ADSENSE_ACCOUNT%" />
+    <meta property="og:title" content="Budget Tracker | Personal Expense Tracking and Budget Planning" />
+    <meta
+      property="og:description"
+      content="Track expenses, monitor spending by category, and improve money habits with a clean personal budget dashboard."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Budget Tracker" />
+    <meta property="og:url" content="%REACT_APP_SITE_URL%/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Budget Tracker | Personal Expense Tracking and Budget Planning" />
+    <meta
+      name="twitter:description"
+      content="Record expenses, review budget trends, and organize your personal finances with Budget Tracker."
+    />
+    <link rel="canonical" href="%REACT_APP_SITE_URL%/" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Budget Tracker",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web",
+        "url": "%REACT_APP_SITE_URL%/",
+        "description": "Budget Tracker is a personal finance web app for expense tracking, category-based budgeting, and spending insights.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+    <title>Budget Tracker | Personal Expense Tracking and Budget Planning</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      Budget Tracker helps you track expenses, review categories, and organize your personal budget.
+      JavaScript is required to use the interactive dashboard. You can also review our privacy policy at
+      %PUBLIC_URL%/privacy.html.
+    </noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
 </html>
