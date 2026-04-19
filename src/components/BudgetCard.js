@@ -13,7 +13,9 @@ import {
   FaPills,
   FaCoffee,
   FaGlassMartiniAlt,
-  FaCarrot
+  FaCarrot,
+  FaPen,
+  FaTrashAlt
 } from 'react-icons/fa';
 
 /**
@@ -83,11 +85,12 @@ export default function BudgetCard({ budget, onDelete, onEdit, isEditing, isHigh
         <div className="card-bottom">
           <span className="badge" style={{ background: config.accent }}>{displayCategory}</span>
           <div className="card-actions">
-            <button className={`btn-link btn-link-neutral${isEditing ? ' active' : ''}`} onClick={() => onEdit(budget)}>
-              {isEditing ? 'Editing' : 'Edit'}
+            <button className={`btn-link btn-link-neutral btn-link-compact${isEditing ? ' active' : ''}`} onClick={() => onEdit(budget)}>
+              <FaPen aria-hidden />
+              <span>{isEditing ? 'Editing' : 'Edit'}</span>
             </button>
-            <button className="btn-link" onClick={() => onDelete(budget._id)}>
-              Remove
+            <button className="btn-link btn-link-icon" onClick={() => onDelete(budget._id)} aria-label={`Remove ${description}`}>
+              <FaTrashAlt aria-hidden />
             </button>
           </div>
         </div>
