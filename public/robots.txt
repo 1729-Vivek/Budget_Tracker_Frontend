@@ -1,6 +1,4 @@
-# https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
 Allow: /
 
-Sitemap: https://budgettracker.example.com/sitemap.xml
+Sitemap: https://app.debuggerlabs.com/sitemap.xml
