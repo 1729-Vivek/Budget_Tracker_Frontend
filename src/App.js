@@ -52,26 +52,21 @@ function AdSlot({ slot, format = 'auto', label = 'Advertisement', className = ''
     }
   }, [isLiveAd, publisherId, slot]);
 
+  if (!isLiveAd) {
+    return null;
+  }
+
   return (
     <section className={`ad-slot-card ${className}`.trim()} aria-label={label}>
       <div className="ad-slot-label">{label}</div>
-      {isLiveAd ? (
-        <ins
-          className="adsbygoogle ad-slot-live"
-          style={{ display: 'block' }}
-          data-ad-client={publisherId}
-          data-ad-slot={slot}
-          data-ad-format={format}
-          data-full-width-responsive="true"
-        />
-      ) : (
-        <div className="ad-slot-placeholder">
-          <strong>Ad placement ready</strong>
-          <p>
-            Add `REACT_APP_GOOGLE_ADSENSE_PUBLISHER_ID` and a slot ID to turn this placeholder into a live AdSense unit.
-          </p>
-        </div>
-      )}
+      <ins
+        className="adsbygoogle ad-slot-live"
+        style={{ display: 'block' }}
+        data-ad-client={publisherId}
+        data-ad-slot={slot}
+        data-ad-format={format}
+        data-full-width-responsive="true"
+      />
     </section>
   );
 }
@@ -523,6 +518,32 @@ export default function App() {
                   </ul>
                 </section>
 
+                <section className="seo-content-grid" aria-label="Budget Tracker information">
+                  <article className="content-panel">
+                    <h2>Budgeting tips for better money management</h2>
+                    <p>
+                      Start by logging every purchase for a short period, then separate essential costs from flexible costs so you can spot easy savings.
+                    </p>
+                    <p>
+                      A clear dashboard helps you compare spending habits instead of guessing where your money goes.
+                    </p>
+                  </article>
+
+                  <article className="content-panel">
+                    <h2>Frequently asked questions</h2>
+                    <div className="faq-list">
+                      <div>
+                        <h3>Is Budget Tracker free to use?</h3>
+                        <p>The current version is designed as a free web-based budget and expense tracker.</p>
+                      </div>
+                      <div>
+                        <h3>What can I track?</h3>
+                        <p>You can record expense names, amounts, dates, and categories, then review them through lists and charts.</p>
+                      </div>
+                    </div>
+                  </article>
+                </section>
+
                 <AdSlot
                   className="content-panel"
                   label="Sponsored placement"
@@ -530,105 +551,76 @@ export default function App() {
                 />
               </section>
 
-              <aside className="auth-panel" id="auth-panel">
-                <div className="auth-copy">
-                  <span className="eyebrow">Personal access</span>
-                  <h2 className="auth-title">Keep your budget private and synced to your account.</h2>
-                  <p className="auth-text">
-                    Create an account to start saving expenses against your own profile, or sign in to continue where you left off.
+              <aside className="auth-panel-stack" id="auth-panel">
+                <div className="auth-panel">
+                  <div className="auth-copy">
+                    <span className="eyebrow">Personal access</span>
+                    <h2 className="auth-title">Keep your budget private and synced to your account.</h2>
+                    <p className="auth-text">
+                      Create an account to start saving expenses against your own profile, or sign in to continue where you left off.
+                    </p>
+                  </div>
+
+                  <div className="auth-switch">
+                    <button
+                      className={`toggle-chip ${authMode === 'login' ? 'active' : ''}`}
+                      type="button"
+                      onClick={() => setAuthMode('login')}
+                    >
+                      Sign in
+                    </button>
+                    <button
+                      className={`toggle-chip ${authMode === 'register' ? 'active' : ''}`}
+                      type="button"
+                      onClick={() => setAuthMode('register')}
+                    >
+                      Register
+                    </button>
+                  </div>
+
+                  {authError ? <div className="error-banner">{authError}</div> : null}
+
+                  <AuthForm mode={authMode} onSubmit={handleAuthSubmit} submitting={authLoading} />
+                </div>
+
+                <article className="content-panel auth-support-panel">
+                  <h2>Privacy and advertising transparency</h2>
+                  <p>
+                    Budget Tracker is built for personal finance organization. Any future advertisements should be clearly labeled and should not interfere with logging expenses or viewing reports.
                   </p>
-                </div>
+                  <p>
+                    Review <a href={legalLinks.privacy}>Privacy Policy</a>, <a href={legalLinks.contact}>Contact</a>, and <a href={legalLinks.terms}>Terms of Service</a>.
+                  </p>
+                </article>
 
-                <div className="auth-switch">
-                  <button
-                    className={`toggle-chip ${authMode === 'login' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setAuthMode('login')}
-                  >
-                    Sign in
-                  </button>
-                  <button
-                    className={`toggle-chip ${authMode === 'register' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setAuthMode('register')}
-                  >
-                    Register
-                  </button>
-                </div>
+                <article className="content-panel auth-support-panel">
+                  <h2>Need help or business contact?</h2>
+                  <p>
+                    A production-ready finance website should make it easy for users, reviewers, and advertising partners to contact the owner. A dedicated contact page improves transparency and trust.
+                  </p>
+                  <p>
+                    Visit <a href={legalLinks.contact}>Contact</a> to publish your support email, business details, and response expectations.
+                  </p>
+                </article>
 
-                {authError ? <div className="error-banner">{authError}</div> : null}
+                <article className="content-panel auth-support-panel">
+                  <h2>Terms and acceptable use</h2>
+                  <p>
+                    Terms of Service help explain the intended use of the platform, account responsibilities, and service limitations. This is especially helpful for ad reviews and general site trust.
+                  </p>
+                  <p>
+                    Review the site terms at <a href={legalLinks.terms}>Terms of Service</a>.
+                  </p>
+                </article>
 
-                <AuthForm mode={authMode} onSubmit={handleAuthSubmit} submitting={authLoading} />
+                <AdSlot
+                  className="content-panel"
+                  label="Responsive ad slot"
+                  slot={process.env.REACT_APP_ADSENSE_HOME_MID_SLOT}
+                />
               </aside>
             </main>
 
-            <section className="seo-content-grid" aria-label="Budget Tracker information">
-              <article className="content-panel">
-                <h2>Budgeting tips for better money management</h2>
-                <p>
-                  Start by logging every purchase for at least two weeks. Once your spending history is visible, separate essential costs from flexible costs and look for repeat categories where small reductions can make a real difference over time.
-                </p>
-                <p>
-                  Many people improve their monthly budget just by checking where daily spending adds up. A clear budget dashboard helps you compare habits instead of guessing.
-                </p>
-              </article>
-
-              <article className="content-panel">
-                <h2>Frequently asked questions</h2>
-                <div className="faq-list">
-                  <div>
-                    <h3>Is Budget Tracker free to use?</h3>
-                    <p>The current version is designed as a free web-based budget and expense tracker.</p>
-                  </div>
-                  <div>
-                    <h3>What can I track?</h3>
-                    <p>You can record expense names, amounts, dates, categories, and then review them through lists and charts.</p>
-                  </div>
-                  <div>
-                    <h3>Is the content suitable for ads?</h3>
-                    <p>The app focuses on original budgeting content, clear navigation, transparent privacy messaging, and a clean user experience that is better aligned with ad review expectations.</p>
-                  </div>
-                </div>
-              </article>
-
-              <article className="content-panel">
-                <h2>Privacy and advertising transparency</h2>
-                <p>
-                  Budget Tracker is built for personal finance organization. Any future advertisements should be clearly labeled and should not interfere with logging expenses or viewing reports. The app also links to a privacy policy so visitors and ad reviewers can understand how the service is intended to operate.
-                </p>
-                <p>
-                  Read the full policy at <a href={legalLinks.privacy}>Privacy Policy</a>.
-                </p>
-              </article>
-            </section>
-
-            <section className="seo-content-grid seo-content-grid-secondary" aria-label="Trust and support information">
-              <article className="content-panel">
-                <h2>Need help or business contact?</h2>
-                <p>
-                  A production-ready finance website should make it easy for users, reviewers, and advertising partners to contact the owner. A dedicated contact page improves transparency and trust.
-                </p>
-                <p>
-                  Visit <a href={legalLinks.contact}>Contact</a> to publish your support email, business details, and response expectations.
-                </p>
-              </article>
-
-              <article className="content-panel">
-                <h2>Terms and acceptable use</h2>
-                <p>
-                  Terms of Service help explain the intended use of the platform, account responsibilities, and service limitations. This is especially helpful for ad reviews and general site trust.
-                </p>
-                <p>
-                  Review the site terms at <a href={legalLinks.terms}>Terms of Service</a>.
-                </p>
-              </article>
-
-              <AdSlot
-                className="content-panel"
-                label="Responsive ad slot"
-                slot={process.env.REACT_APP_ADSENSE_HOME_MID_SLOT}
-              />
-            </section>
           </>
         ) : (
           <main className="main-grid">
