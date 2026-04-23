@@ -11,6 +11,8 @@ import {
   deleteBudget,
   loginUser,
   registerUser,
+  requestPasswordReset,
+  resetPassword,
   getCurrentUser,
 } from './services/budgetService';
 import './App.css';
@@ -80,6 +82,34 @@ function IconMoney() {
   );
 }
 
+const getInitialResetState = () => {
+  if (typeof window === 'undefined') {
+    return { token: '', email: '' };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  return {
+    token: params.get('token') || '',
+    email: params.get('email') || '',
+  };
+};
+
+const getInitialAuthMode = () => {
+  if (typeof window === 'undefined') {
+    return 'login';
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const queryMode = params.get('mode');
+  const token = params.get('token');
+
+  if (queryMode === 'reset' && token) {
+    return 'reset';
+  }
+
+  return queryMode === 'forgot' ? 'forgot' : 'login';
+};
+
 export default function App() {
   const [budgets, setBudgets] = useState([]);
   const [user, setUser] = useState(() => {
@@ -94,7 +124,9 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(false);
   const [error, setError] = useState(null);
   const [authError, setAuthError] = useState('');
-  const [authMode, setAuthMode] = useState('login');
+  const [authNotice, setAuthNotice] = useState('');
+  const [authMode, setAuthMode] = useState(getInitialAuthMode);
+  const [resetState, setResetState] = useState(getInitialResetState);
   const [editingBudget, setEditingBudget] = useState(null);
   const [highlightedBudgetId, setHighlightedBudgetId] = useState(null);
   const [toast, setToast] = useState(null);
@@ -103,6 +135,50 @@ export default function App() {
   const [minAmountFilter, setMinAmountFilter] = useState('');
   const [maxAmountFilter, setMaxAmountFilter] = useState('');
   const leftColumnRef = useRef(null);
+
+  const updateAuthLocation = useCallback((nextMode, nextResetState = resetState) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    params.delete('mode');
+    params.delete('token');
+    params.delete('email');
+
+    if (nextMode === 'forgot') {
+      params.set('mode', 'forgot');
+    }
+
+    if (nextMode === 'reset' && nextResetState.token) {
+      params.set('mode', 'reset');
+      params.set('token', nextResetState.token);
+
+      if (nextResetState.email) {
+        params.set('email', nextResetState.email);
+      }
+    }
+
+    const queryString = params.toString();
+    const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ''}`;
+    window.history.replaceState({}, '', nextUrl);
+  }, [resetState]);
+
+  const handleAuthModeChange = useCallback((nextMode) => {
+    setAuthError('');
+    setAuthNotice('');
+    setAuthMode(nextMode);
+
+    if (nextMode !== 'reset') {
+      const clearedResetState = { token: '', email: '' };
+      setResetState(clearedResetState);
+      updateAuthLocation(nextMode, clearedResetState);
+      return;
+    }
+
+    updateAuthLocation(nextMode);
+  }, [updateAuthLocation]);
 
   const getCategoryMap = useCallback(() => {
     try {
@@ -254,8 +330,27 @@ export default function App() {
   const handleAuthSubmit = async (form) => {
     setAuthLoading(true);
     setAuthError('');
+    setAuthNotice('');
 
     try {
+      if (authMode === 'forgot') {
+        const response = await requestPasswordReset({ email: form.email });
+        handleAuthModeChange('login');
+        setAuthNotice(
+          response.debugResetUrl
+            ? `${response.message || 'If an account exists for that email, a reset link has been sent.'} Dev reset link: ${response.debugResetUrl}`
+            : (response.message || 'If an account exists for that email, a reset link has been sent.')
+        );
+        return;
+      }
+
+      if (authMode === 'reset') {
+        await resetPassword({ token: resetState.token, password: form.password });
+        handleAuthModeChange('login');
+        setAuthNotice('Password reset successful. Please sign in with your new password.');
+        return;
+      }
+
       const action = authMode === 'register' ? registerUser : loginUser;
       const payload = authMode === 'register' ? form : { email: form.email, password: form.password };
       const response = await action(payload);
@@ -565,22 +660,29 @@ export default function App() {
                     <button
                       className={`toggle-chip ${authMode === 'login' ? 'active' : ''}`}
                       type="button"
-                      onClick={() => setAuthMode('login')}
+                      onClick={() => handleAuthModeChange('login')}
                     >
                       Sign in
                     </button>
                     <button
                       className={`toggle-chip ${authMode === 'register' ? 'active' : ''}`}
                       type="button"
-                      onClick={() => setAuthMode('register')}
+                      onClick={() => handleAuthModeChange('register')}
                     >
                       Register
                     </button>
                   </div>
 
                   {authError ? <div className="error-banner">{authError}</div> : null}
+                  {authNotice ? <div className="success-banner">{authNotice}</div> : null}
 
-                  <AuthForm mode={authMode} onSubmit={handleAuthSubmit} submitting={authLoading} />
+                  <AuthForm
+                    mode={authMode}
+                    onSubmit={handleAuthSubmit}
+                    onModeChange={handleAuthModeChange}
+                    submitting={authLoading}
+                    resetEmail={resetState.email}
+                  />
                 </div>
 
                 <article className="content-panel auth-support-panel">

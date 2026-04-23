@@ -42,6 +42,18 @@ export const loginUser = async (payload) =>
     body: JSON.stringify(payload),
   });
 
+export const requestPasswordReset = async (payload) =>
+  request('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const resetPassword = async (payload) =>
+  request('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
 export const getCurrentUser = async (token) =>
   request('/auth/me', {
     headers: withAuth(token),
